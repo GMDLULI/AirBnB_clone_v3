@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-""" app.py """
+''' Creates an instance of flask '''
 
 from flask import Flask, make_response, jsonify
 from models import storage
@@ -7,19 +7,20 @@ from api.v1.views import app_views
 import os
 
 app = Flask(__name__)
+app.url_map.strict_slashes = False
 app.register_blueprint(app_views)
 
 
 @app.teardown_appcontext
-def tear(self):
-    """tear down app.py"""
+def tear_d(self):
+    ''' Tears down app.py '''
     storage.close()
 
 
-@auth.error_handler
-def not_found():
-    """ handles 404 errors"""
-    return make_reposnse(jsonify({"error": "Not found"}), 404)
+@app.errorhandler(404)
+def not_found(error):
+    ''' Returns error 404'''
+    return make_response(jsonify({"error": "Not found"}), 404)
 
 
 if __name__ == "__main__":
