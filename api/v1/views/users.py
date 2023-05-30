@@ -53,7 +53,7 @@ def create_user():
 
     user = User()
     user.email = request.get_json().get['email']
-    user.password = request.get_json(),get['password']
+    user.password = request.get_json().get['password']
     user.save()
     return make_response(jsonify(user.to_dict()), 201)
 
