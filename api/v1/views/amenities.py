@@ -1,73 +1,71 @@
 #!/usr/bin/python3
-"""Amenity module """
-from models.amenity import Amenity
+"""Amenity view module"""
 from api.v1.views import app_views
 from api.v1.views import *
-from flask import jsonify, abort, request, make_response
 from models import storage
+from models.amenity import Amenity
+from flask import jsonify, make_response, request, abort
 
 
-@app_views.route('/amenities', methods=['GET'])
+@app_views.route("/amenities", methods=["GET"])
 def all_amenities():
-    """Returns a list of amenities"""
-
-    all_amenities = []
-
+    '''Returns a list of all the amenities'''
+    amenities_list = []
     for amenity in storage.all("Amenity").values():
-        all_amenities.append(amenity.to_dict())
-    return jsonify(all_amenities)
+        amenities_list.append(amenity.to_dict())
+    return jsonify(amenities_list)
 
 
-@app_views.route('/cities/<amenity_id>')
-def get_method_amenity(state_id):
-    """Returns an instance of the specified object"""
+@app_views.route("/amenities/<amenity_id>")
+def amenity(amenity_id):
+    '''Returns an instance of the specified object'''
     amenity = storage.get("Amenity", amenity_id)
-    if city is None:
+    if not amenity:
         abort(404)
     return jsonify(amenity.to_dict())
 
 
-@app_views.route('/amenities/<amenity_id>', methods=['DELETE'])
-def del_method_amenity(amenity_id):
-    """deletes amenity"""
+@app_views.route("/amenities/<amenity_id>", methods=['DELETE'])
+def delete_amenity(amenity_id):
+    '''Deletes the specified amenity'''
     amenity = storage.get("Amenity", amenity_id)
-    if amenity is None:
+    if not amenity:
         abort(404)
-    storage.delete()
+    storage.delete(amenity)
     storage.save()
-    return make_response(jsonify({}, 200))
+    return make_response(jsonify({}), 200)
 
 
-@app_views.route('/amenities', methods=['POST'])
-def create_amenities(state_id):
-    """creates specified test"""
-
+@app_views.route("/amenities", methods=["POST"])
+def create_amenity():
+    '''Creates the specified test'''
     if not request.get_json():
-        return abort(400, description="Not a JSON")
+        abort(400, description="Not a JSON")
 
-    if 'name' not in request.get_json():
-        return abort(400, description="Missing name")
+    if not request.get_json().get('name'):
+        abort(400, description="Missing name")
 
     amenity = Amenity()
-    Amenity.name = request.get_json().get['name']
+    amenity.name = request.get_json()['name']
     amenity.save()
     return make_response(jsonify(amenity.to_dict()), 201)
 
 
-@app_views.route('/amenities/<amenity_id>', methods=['PUT'])
+@app_views.route("/amenities/<amenity_id>", methods=['PUT'])
 def update_amenity(amenity_id):
-    """updates city method"""
-    if not request.get_json():
-        return abort(400, description="Not a JSON")
-
+    '''Updates the amenity with the id passed'''
     amenity = storage.get("Amenity", amenity_id)
-
-    if amenity is None:
+    if not amenity:
         abort(404)
 
-    for key, value in request.get_json().items():
-        if key not in ['id', 'created_at', 'updated']:
-            setattr(amenity, key, value)
+    if not request.get_json():
+        abort(400, description="Not a JSON")
+
+    for k, v in request.get_json().items():
+        if k == "id" or k == "created_at" or k == "updated_at":
+            continue
+        else:
+            setattr(amenity, k, v)
     storage.save()
 
-    return make_response(jsonify(amenity.to_dict(), 200))
+    return make_response(jsonify(amenity.to_dict()), 200)
